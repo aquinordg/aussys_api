@@ -8,4 +8,4 @@ uvicorn app:app --reload
 
 Will run on http://127.0.0.1:8000
 
-For more details visit http://127.0.0.1:8000/docs#
+For more details visit http://127.0.0.1:8000/docs
