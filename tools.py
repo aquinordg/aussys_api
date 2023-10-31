@@ -20,8 +20,10 @@ def predict(model, dataset, image_size: tuple = (64, 64), color_mode: str = 'gra
     y_pred_proba = []
 
     # predict dataset test
+    id = []
     for i in range(len(X_test)):
         path_image = X_test[i]
+        id.append(path_image.split('/')[-1])
 
         image = preprocessing.image.load_img(path_image, color_mode=color_mode, target_size=image_size)
         image = preprocessing.image.img_to_array(image) / 255
@@ -31,7 +33,7 @@ def predict(model, dataset, image_size: tuple = (64, 64), color_mode: str = 'gra
         y_pred_proba.append(prediction[:, 1][0])
         y_pred.append(prediction.argmax(axis=1)[0])
 
-    return y_test, y_pred, y_pred_proba
+    return id, y_test, y_pred, y_pred_proba
 
 def predict_model(model: str, dataset: str, image_size: tuple = (64, 64), color_mode: str = 'grayscale'):
     model_name = model.split('/')[-1]
@@ -42,9 +44,10 @@ def predict_model(model: str, dataset: str, image_size: tuple = (64, 64), color_
     for i in range(10):
         res_aux = pd.DataFrame()
         path = f'{dataset}/split_{i+1:02}'
-        y_test, y_pred, y_pred_proba = predict(model, path)
+        id, y_test, y_pred, y_pred_proba = predict(model, path)
 
-        res_aux = pd.DataFrame({'model': model_name,
+        res_aux = pd.DataFrame({'id': id,
+                                'model': model_name,
                                 'dataset': dataset_name,
                                 'fold': i+1,
                                 'expected': y_test,
