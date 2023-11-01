@@ -9,7 +9,7 @@ Created on Tue Nov 17 21:40:41 2020
 import os
 #import shutil
 import uvicorn
-from fastapi import FastAPI, File, UploadFile
+from fastapi import FastAPI, File, UploadFile, Query
 import zipfile
 
 
@@ -47,6 +47,11 @@ def state():
         bench.append(b.split('/')[-1])
     return {'message': f'MODELS: {mod} BENCHMARKS: {bench}'}
 
+# Get the benchmarks and models
+if os.path.isdir('benchmarks'): sceneries = os.listdir('benchmarks')
+else: sceneries = []
+if os.path.isdir('models'): models = os.listdir('models')
+else: models    = []
 
 @app.post("/upload_model")
 def upload_model(file: UploadFile = File(...)):
@@ -106,22 +111,18 @@ def upload_benchmarks(file: UploadFile = File(...)):
 
 
 @app.post('/run_predictions')
-def run_predictions():
-
+def run_predictions(scenery: str = Query(enum=sceneries), model: str = Query(enum = models)):
+    SCENERY = 'benchmarks/'+scenery
+    MODEL   = 'models/'+model
     if not os.path.isdir('results'): 
             os.mkdir('results')
-
-    MODELS = glob('models/*')
-    BENCHMARKS = glob('benchmarks/*')
-
-    for model in MODELS:
-        for benchmark in BENCHMARKS:
-            predict_model(model, benchmark)
+        
+    predict_model(MODEL, SCENERY)
 
     #shutil.make_archive('results', 'zip', 'results')
 
     return {"message": f"Results ready"}
-
+    
 #Run the API with uvicorn
 #Will run on http://127.0.0.1:8000
 if __name__ == '__main__':
