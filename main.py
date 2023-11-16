@@ -68,7 +68,7 @@ def state():
     for b in BENCHMARKS:
         bench.append(b.split('/')[-1])
         
-    return {"MODELS": mod, "BENCHMARKS": bench, "RESULTS": res}
+    return {"MODELS": mod, "SCENARIOS": bench, "RESULTS": res}
 
 # Get the benchmarks and models
 if os.path.isdir('benchmarks'): sceneries = os.listdir('benchmarks')
