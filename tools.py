@@ -1,6 +1,7 @@
 import os
 import json
 import zipfile
+import shutil
 import numpy as np
 import pandas as pd
 import splitfolders
@@ -89,6 +90,7 @@ def predict_model(model: str, dataset: str):
         results = pd.concat([results, res_aux], ignore_index=True)
 
     results.to_csv(f'results/results_{model_name}&{dataset_name}.csv', index = False)
+    shutil.rmtree(model_path)
 
 def split_folders(path_dataset, path_split):
     list_seed = []
