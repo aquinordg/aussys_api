@@ -101,8 +101,8 @@ def split_folders(path_dataset, path_split):
                 list_seed.append(seed)
                 break
             
-            folder = f'{path_split}/split_{i+1:02}'
-            os.system(f'mkdir -p {path_split}')
-            val_size = min(len(os.listdir(path_dataset+'/test/POD')), len(os.listdir(path_dataset+'/test/NIL')))//10
-            path_test = path_dataset+'/test'
-            splitfolders.fixed(path_test, folder, seed=seed, fixed=(val_size, val_size))
+        fold = f'{path_split}/split_{i+1:02}'
+        os.system(f'mkdir -p {path_split}')
+        val_size = min(len(os.listdir(path_dataset+'/test/POD')), len(os.listdir(path_dataset+'/test/NIL')))//10
+        path_test = path_dataset+'/test'
+        splitfolders.fixed(path_test, fold, seed=seed, fixed=(val_size, val_size))
