@@ -1,17 +1,11 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Tue Nov 17 21:40:41 2020
-
-@author: win10
-"""
-
 # 1. Library imports
 import os
-#import shutil
+import shutil
 import uvicorn
 from fastapi import FastAPI, File, UploadFile, Query
-import zipfile
+from fastapi.responses import FileResponse
 
+import zipfile
 
 import numpy as np
 import pandas as pd
@@ -20,24 +14,46 @@ from glob import glob
 
 from tools import split_folders, predict_model
 
-# Variables
-thresholds = [ .25, 0.5, 0.75 ]
-list_thr   = np.arange(0, 1, 0.005).tolist()
+from pydantic import BaseModel
 
 # Setting model and benchmarks
 MODELS = glob('models/*')
 BENCHMARKS = glob('benchmarks/*')
 
+def zipdir(path, ziph):
+    for root, dirs, files in os.walk(path):
+        for file in files:
+            ziph.write(os.path.join(root, file), 
+                       os.path.relpath(os.path.join(root, file), 
+                                       os.path.join(path, '..')))
+
 #Create the app object
 app = FastAPI()
+
+class status(BaseModel):
+    MODELS: list
+    BENCHMARKS: list
+
+class message_model(BaseModel):
+    msg: str
+
+class message_benchmarks(BaseModel):
+    msg: str
+
+class message_predictions(BaseModel):
+    msg: str
 
 #Index route, opens automatically on http://127.0.0.1:8000
 @app.get('/')
 def index():
     return {'message': 'AuSSys: Autonomous Search System'}
 
-@app.post('/state')
+@app.get('/state', response_model=status)
 def state():
+
+    MODELS = glob('models/*')
+    BENCHMARKS = glob('benchmarks/*')
+
     mod = []
     for m in MODELS:
         mod.append(m.split('/')[-1])
@@ -45,7 +61,8 @@ def state():
     bench = []
     for b in BENCHMARKS:
         bench.append(b.split('/')[-1])
-    return {'message': f'MODELS: {mod} BENCHMARKS: {bench}'}
+        
+    return {"MODELS": mod, "BENCHMARKS": bench}
 
 # Get the benchmarks and models
 if os.path.isdir('benchmarks'): sceneries = os.listdir('benchmarks')
@@ -53,75 +70,75 @@ else: sceneries = []
 if os.path.isdir('models'): models = os.listdir('models')
 else: models    = []
 
-@app.post("/upload_model")
+@app.post("/upload_model", response_model=message_model)
 def upload_model(file: UploadFile = File(...)):
-    try:
-        if not os.path.isdir('models'): 
-            os.mkdir('models')
+    if not os.path.isdir('models'): 
+        os.mkdir('models')
 
-        contents = file.file.read()
-        with open(file.filename, 'wb') as f:
-            f.write(contents)
+    contents = file.file.read()
+    with open(file.filename, 'wb') as f:
+        f.write(contents)
 
-        with zipfile.ZipFile(file.filename, 'r') as zip_ref:
-            zip_ref.extractall('models')
+    with zipfile.ZipFile(file.filename, 'r') as zip_ref:
+        zip_ref.extractall('models')
 
-        os.remove(file.filename)
+    os.remove(file.filename)
 
-    except Exception:
-        return {"message": "There was an error uploading the file"}
-    finally:
-        file.file.close()
-
-    return {"message": f"{file.filename} successfully uploaded and extracted."}
+    return {"msg": f"Model {file.filename} successfully uploaded and extracted."}
 
 
-@app.post("/upload_benchmarks")
+@app.post("/upload_benchmarks", response_model=message_benchmarks)
 def upload_benchmarks(file: UploadFile = File(...)):
-    try:
-        if not os.path.isdir('files'): 
-            os.mkdir('files')
+    if not os.path.isdir('files'): 
+        os.mkdir('files')
 
-        contents = file.file.read()
-        with open(file.filename, 'wb') as f:
-            f.write(contents)
+    contents = file.file.read()
+    with open(file.filename, 'wb') as f:
+        f.write(contents)
 
-        with zipfile.ZipFile(file.filename, 'r') as zip_ref:
-            zip_ref.extractall('files')
+    with zipfile.ZipFile(file.filename, 'r') as zip_ref:
+        zip_ref.extractall('files')
 
-        os.remove(file.filename)
+    os.remove(file.filename)
 
-    except Exception:
-        return {"message": "There was an error uploading the file"}
-    finally:
-        file.file.close()
+    if not os.path.isdir('benchmarks'): 
+        os.mkdir('benchmarks')
 
-        if not os.path.isdir('benchmarks'): 
-            os.mkdir('benchmarks')
+    files = glob('files/*')
+    list_files = os.listdir('files/')
+    list_benchmarks = os.listdir('benchmarks/')
 
-        files = glob('files/*')
-        list_sets = os.listdir('files/')
-        for fd, path in zip(files, list_sets):
+    for fd, path in zip(files, list_files):
+        if path not in list_benchmarks:
             if not os.path.isdir('benchmarks/'+path): 
                 os.mkdir('benchmarks/'+path)
             path_split = 'benchmarks/'+path
             split_folders(fd, path_split)
+    
+    shutil.rmtree('files')
 
-    return {"message": f"{file.filename} successfully uploaded and extracted."}
+    return {"msg": "Benchmark(s) upload finished."}
 
 
-@app.post('/run_predictions')
+@app.post('/run_predictions', response_model=message_predictions)
 def run_predictions(scenery: str = Query(enum=sceneries), model: str = Query(enum = models)):
     SCENERY = 'benchmarks/'+scenery
     MODEL   = 'models/'+model
+    list_results = os.listdir('results')
     if not os.path.isdir('results'): 
             os.mkdir('results')
         
-    predict_model(MODEL, SCENERY)
+    if f'results_{model}&{scenery}.csv' not in list_results:
+        predict_model(MODEL, SCENERY)
 
-    #shutil.make_archive('results', 'zip', 'results')
+    return {"msg": "Prediction finished."}
 
-    return {"message": f"Results ready"}
+@app.post('/download_results')
+def download_results():
+    with zipfile.ZipFile('results.zip', 'w', zipfile.ZIP_DEFLATED) as zipf:
+        zipdir('results/', zipf)
+
+    return FileResponse("results.zip")
     
 #Run the API with uvicorn
 #Will run on http://127.0.0.1:8000

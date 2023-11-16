@@ -60,13 +60,13 @@ def predict_model(model: str, dataset: str, image_size: tuple = (64, 64), color_
 def split_folders(path_dataset, path_split):
     list_seed = []
     for i in range(10):
-    while True:
-        seed = np.random.randint(32, 230)
-        if seed not in list_seed:
-        list_seed.append(seed)
-        break
-      
-    folder = f'{path_split}/split_{i+1:02}'
-    os.system(f'mkdir -p {path_split}')
-    val_size = min(len(os.listdir(path_dataset+'/pod')), len(os.listdir(path_dataset+'/pod')))//10
-    splitfolders.fixed(path_dataset, folder, seed=seed, fixed=(val_size, val_size))
+        while True:  
+            seed = np.random.randint(32, 230)
+            if seed not in list_seed:
+                list_seed.append(seed)
+                break
+            
+            folder = f'{path_split}/split_{i+1:02}'
+            os.system(f'mkdir -p {path_split}')
+            val_size = min(len(os.listdir(path_dataset+'/pod')), len(os.listdir(path_dataset+'/pod')))//10
+            splitfolders.fixed(path_dataset, folder, seed=seed, fixed=(val_size, val_size))
