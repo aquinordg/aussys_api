@@ -110,8 +110,8 @@ def upload_benchmarks(file: UploadFile = File(...)):
     if not os.path.isdir('benchmarks'): 
         os.mkdir('benchmarks')
 
-    files = glob('files/*')
-    list_files = os.listdir('files/')
+    files = glob('files/test_set/*')
+    list_sets = os.listdir('files/test_set/')
     list_benchmarks = os.listdir('benchmarks/')
 
     for fd, path in zip(files, list_files):
