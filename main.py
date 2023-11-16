@@ -32,7 +32,7 @@ app = FastAPI()
 
 class status(BaseModel):
     MODELS: list
-    BENCHMARKS: list
+    SCENARIOS: list
     RESULTS: list
 
 class message_model(BaseModel):
