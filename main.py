@@ -33,6 +33,7 @@ app = FastAPI()
 class status(BaseModel):
     MODELS: list
     BENCHMARKS: list
+    RESULTS: list
 
 class message_model(BaseModel):
     msg: str
@@ -53,6 +54,11 @@ def state():
 
     MODELS = glob('models/*')
     BENCHMARKS = glob('benchmarks/*')
+    RESULTS = glob('results/*')
+
+    res = []
+    for r in RESULTS:
+        res.append(r.split('/')[-1])
 
     mod = []
     for m in MODELS:
@@ -62,7 +68,7 @@ def state():
     for b in BENCHMARKS:
         bench.append(b.split('/')[-1])
         
-    return {"MODELS": mod, "BENCHMARKS": bench}
+    return {"MODELS": mod, "BENCHMARKS": bench, "RESULTS": res}
 
 # Get the benchmarks and models
 if os.path.isdir('benchmarks'): sceneries = os.listdir('benchmarks')
