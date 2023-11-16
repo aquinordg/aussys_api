@@ -122,6 +122,10 @@ def upload_benchmarks(file: UploadFile = File(...)):
 
 @app.post('/run_predictions', response_model=message_predictions)
 def run_predictions(scenery: str = Query(enum=sceneries), model: str = Query(enum = models)):
+
+    if not os.path.isdir('results'): 
+        os.mkdir('results')
+
     SCENERY = 'benchmarks/'+scenery
     MODEL   = 'models/'+model
     list_results = os.listdir('results')
