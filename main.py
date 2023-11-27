@@ -20,34 +20,42 @@ from pydantic import BaseModel
 MODELS = glob('models/*')
 BENCHMARKS = glob('benchmarks/*')
 
+
 def zipdir(path, ziph):
     for root, dirs, files in os.walk(path):
         for file in files:
-            ziph.write(os.path.join(root, file), 
-                       os.path.relpath(os.path.join(root, file), 
+            ziph.write(os.path.join(root, file),
+                       os.path.relpath(os.path.join(root, file),
                                        os.path.join(path, '..')))
+
 
 #Create the app object
 app = FastAPI()
+
 
 class status(BaseModel):
     MODELS: list
     SCENARIOS: list
     RESULTS: list
 
+
 class message_model(BaseModel):
     msg: str
+
 
 class message_benchmarks(BaseModel):
     msg: str
 
+
 class message_predictions(BaseModel):
     msg: str
+
 
 #Index route, opens automatically on http://127.0.0.1:8000
 @app.get('/')
 def index():
     return {'message': 'AuSSys: Autonomous Search System'}
+
 
 @app.get('/state', response_model=status)
 def state():
@@ -67,8 +75,9 @@ def state():
     bench = []
     for b in BENCHMARKS:
         bench.append(b.split('/')[-1])
-        
+
     return {"MODELS": mod, "SCENARIOS": bench, "RESULTS": res}
+
 
 # Get the benchmarks and models
 if os.path.isdir('benchmarks'): sceneries = os.listdir('benchmarks')
@@ -78,7 +87,7 @@ else: models    = []
 
 @app.post("/upload_model", response_model=message_model)
 def upload_model(file: UploadFile = File(...)):
-    if not os.path.isdir('models'): 
+    if not os.path.isdir('models'):
         os.mkdir('models')
 
     contents = file.file.read()
@@ -95,7 +104,7 @@ def upload_model(file: UploadFile = File(...)):
 
 @app.post("/upload_benchmarks", response_model=message_benchmarks)
 def upload_benchmarks(file: UploadFile = File(...)):
-    if not os.path.isdir('files'): 
+    if not os.path.isdir('files'):
         os.mkdir('files')
 
     contents = file.file.read()
@@ -107,7 +116,7 @@ def upload_benchmarks(file: UploadFile = File(...)):
 
     os.remove(file.filename)
 
-    if not os.path.isdir('benchmarks'): 
+    if not os.path.isdir('benchmarks'):
         os.mkdir('benchmarks')
 
     files = glob('files/test_set/*')
@@ -116,45 +125,48 @@ def upload_benchmarks(file: UploadFile = File(...)):
 
     for fd, path in zip(files, list_files):
         if path not in list_benchmarks:
-            if not os.path.isdir('benchmarks/'+path): 
+            if not os.path.isdir('benchmarks/'+path):
                 os.mkdir('benchmarks/'+path)
             path_split = 'benchmarks/'+path
             split_folders(fd, path_split)
-    
+
     shutil.rmtree('files')
 
     return {"msg": "Benchmark(s) upload finished."}
 
 
 @app.post('/run_predictions', response_model=message_predictions)
-def run_predictions(scenery: str = Query(enum=sceneries), model: str = Query(enum = models)):
+def run_predictions(scenery: str, model: str):
 
-    if not os.path.isdir('results'): 
+    if not os.path.isdir('results'):
         os.mkdir('results')
 
     SCENERY = 'benchmarks/'+scenery
     MODEL   = 'models/'+model
     list_results = os.listdir('results')
-    if not os.path.isdir('results'): 
+    if not os.path.isdir('results'):
             os.mkdir('results')
-        
+
     if f'results_{model}&{scenery}.csv' not in list_results:
         predict_model(MODEL, SCENERY)
 
     return {"msg": "Prediction finished."}
 
-@app.post('/download_results')
-def download_results():
-    with zipfile.ZipFile('results.zip', 'w', zipfile.ZIP_DEFLATED) as zipf:
-        zipdir('results/', zipf)
 
-    return FileResponse("results.zip")
-    
+@app.post('/download_results', response_model=message_predictions)
+def download_results(scenery: str, model: str):
+
+    filename = f'results/results_{model}&{scenery}.csv'
+
+    if os.path.isfile():
+        return FileResponse(filename)
+
+    return {"msg": "Result not available."}
+
+
 #Run the API with uvicorn
 #Will run on http://127.0.0.1:8000
 if __name__ == '__main__':
     uvicorn.run(app, host='127.0.0.1', port=8000)
-    
+
 #uvicorn app:app --reload
-
-

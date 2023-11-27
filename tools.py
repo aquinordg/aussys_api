@@ -61,7 +61,13 @@ def predict(model, dataset, image_size):
 
     return id, y_test, y_pred, y_pred_proba
 
+
 def predict_model(model: str, dataset: str):
+    """
+    Generate the results for a single model in a specific dataset.
+    Saves the result in a CSV file.
+    """
+
     model_path = model.split('.zip')[0]
     with zipfile.ZipFile(model, 'r') as zip_ref:
         zip_ref.extractall(model_path)
@@ -73,7 +79,7 @@ def predict_model(model: str, dataset: str):
     dataset_name = dataset.split('/')[-1]
 
     model = models.load_model(model_path+'/model', custom_objects={'fbeta': fbeta})
-    
+
     results = pd.DataFrame()
     for i in range(10):
         res_aux = pd.DataFrame()
@@ -86,21 +92,22 @@ def predict_model(model: str, dataset: str):
                                 'fold': i+1,
                                 'expected': y_test,
                                 'predicted': y_pred_proba})
-        
+
         results = pd.concat([results, res_aux], ignore_index=True)
 
     results.to_csv(f'results/results_{model_name}&{dataset_name}.csv', index = False)
     shutil.rmtree(model_path)
 
+
 def split_folders(path_dataset, path_split):
     list_seed = []
     for i in range(10):
-        while True:  
+        while True:
             seed = np.random.randint(32, 230)
             if seed not in list_seed:
                 list_seed.append(seed)
                 break
-            
+
         fold = f'{path_split}/split_{i+1:02}'
         os.system(f'mkdir -p {path_split}')
         val_size = min(len(os.listdir(path_dataset+'/test/POD')), len(os.listdir(path_dataset+'/test/NIL')))//10
