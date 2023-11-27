@@ -1,3 +1,8 @@
 numpy
 pandas
-glob
+fastapi
+uvicorn
+split-folders
+keras
+tensorflow
+python-multipart
