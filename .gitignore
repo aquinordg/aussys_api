@@ -156,3 +156,6 @@ cython_debug/
 *.cfg.bak
 *.log*
 *.py.bak
+*.jpg
+*.zip
+*.csv

@@ -2,7 +2,7 @@
 import os
 import shutil
 import uvicorn
-from fastapi import FastAPI, File, UploadFile, Query
+from fastapi import FastAPI, File, UploadFile
 from fastapi.responses import FileResponse
 
 import zipfile
@@ -41,15 +41,6 @@ class status(BaseModel):
 
 class message_model(BaseModel):
     msg: str
-
-
-class message_benchmarks(BaseModel):
-    msg: str
-
-
-class message_predictions(BaseModel):
-    msg: str
-
 
 #Index route, opens automatically on http://127.0.0.1:8000
 @app.get('/')
@@ -102,7 +93,7 @@ def upload_model(file: UploadFile = File(...)):
     return {"msg": f"Model {file.filename} successfully uploaded and extracted."}
 
 
-@app.post("/upload_benchmarks", response_model=message_benchmarks)
+@app.post("/upload_benchmarks", response_model=message_model)
 def upload_benchmarks(file: UploadFile = File(...)):
     if not os.path.isdir('files'):
         os.mkdir('files')
@@ -135,17 +126,17 @@ def upload_benchmarks(file: UploadFile = File(...)):
     return {"msg": "Benchmark(s) upload finished."}
 
 
-@app.post('/run_predictions', response_model=message_predictions)
+@app.post('/run_predictions', response_model=message_model)
 def run_predictions(scenery: str, model: str):
 
     if not os.path.isdir('results'):
         os.mkdir('results')
 
-    SCENERY = 'benchmarks/'+scenery
-    MODEL   = 'models/'+model
+    SCENERY = 'benchmarks/' + scenery
+    MODEL   = 'models/' + model + '.zip'
     list_results = os.listdir('results')
     if not os.path.isdir('results'):
-            os.mkdir('results')
+        os.mkdir('results')
 
     if f'results_{model}&{scenery}.csv' not in list_results:
         predict_model(MODEL, SCENERY)
@@ -153,13 +144,13 @@ def run_predictions(scenery: str, model: str):
     return {"msg": "Prediction finished."}
 
 
-@app.post('/download_results', response_model=message_predictions)
+@app.post('/download_results', response_model=message_model)
 def download_results(scenery: str, model: str):
 
     filename = f'results/results_{model}&{scenery}.csv'
 
-    if os.path.isfile():
-        return FileResponse(filename)
+    if os.path.isfile(filename):
+        return FileResponse(filename, media_type="text/csv")
 
     return {"msg": "Result not available."}
 
