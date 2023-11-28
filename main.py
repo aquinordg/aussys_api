@@ -18,7 +18,7 @@ from pydantic import BaseModel
 
 # Setting model and benchmarks
 MODELS = glob('models/*')
-BENCHMARKS = glob('benchmarks/*')
+BENCHMARKS = glob('scenarios/*')
 
 
 def zipdir(path, ziph):
@@ -52,7 +52,7 @@ def index():
 def state():
 
     MODELS = glob('models/*')
-    BENCHMARKS = glob('benchmarks/*')
+    SCENARIOS = glob('scenarios/*')
     RESULTS = glob('results/*')
 
     res = []
@@ -63,15 +63,15 @@ def state():
     for m in MODELS:
         mod.append(m.split('/')[-1])
 
-    bench = []
-    for b in BENCHMARKS:
-        bench.append(b.split('/')[-1])
+    sce = []
+    for s in SCENARIOS:
+        bench.append(s.split('/')[-1])
 
-    return {"MODELS": mod, "SCENARIOS": bench, "RESULTS": res}
+    return {"MODELS": mod, "SCENARIOS": sce, "RESULTS": res}
 
 
 # Get the benchmarks and models
-if os.path.isdir('benchmarks'): sceneries = os.listdir('benchmarks')
+if os.path.isdir('scenarios'): sceneries = os.listdir('scenarios')
 else: sceneries = []
 if os.path.isdir('models'): models = os.listdir('models')
 else: models    = []
@@ -93,8 +93,8 @@ def upload_model(file: UploadFile = File(...)):
     return {"msg": f"Model {file.filename} successfully uploaded and extracted."}
 
 
-@app.post("/upload_benchmarks", response_model=message_model)
-def upload_benchmarks(file: UploadFile = File(...)):
+@app.post("/upload_scenarios", response_model=message_model)
+def upload_scenarios(file: UploadFile = File(...)):
     if not os.path.isdir('files'):
         os.mkdir('files')
 
@@ -107,23 +107,23 @@ def upload_benchmarks(file: UploadFile = File(...)):
 
     os.remove(file.filename)
 
-    if not os.path.isdir('benchmarks'):
-        os.mkdir('benchmarks')
+    if not os.path.isdir('scenarios'):
+        os.mkdir('scenarios')
 
     files = glob('files/test_set/*')
     list_files = os.listdir('files/test_set/')
-    list_benchmarks = os.listdir('benchmarks/')
+    list_scenarios = os.listdir('scenarios/')
 
     for fd, path in zip(files, list_files):
-        if path not in list_benchmarks:
-            if not os.path.isdir('benchmarks/'+path):
-                os.mkdir('benchmarks/'+path)
-            path_split = 'benchmarks/'+path
+        if path not in list_scenarios:
+            if not os.path.isdir('scenarios/'+path):
+                os.mkdir('scenarios/'+path)
+            path_split = 'scenarios/'+path
             split_folders(fd, path_split)
 
     shutil.rmtree('files')
 
-    return {"msg": "Benchmark(s) upload finished."}
+    return {"msg": "Upload finished."}
 
 
 @app.post('/run_predictions', response_model=message_model)
@@ -132,7 +132,7 @@ def run_predictions(scenery: str, model: str):
     if not os.path.isdir('results'):
         os.mkdir('results')
 
-    SCENERY = 'benchmarks/' + scenery
+    SCENERY = 'scenarios/' + scenery
     MODEL   = 'models/' + model + '.zip'
     list_results = os.listdir('results')
     if not os.path.isdir('results'):
