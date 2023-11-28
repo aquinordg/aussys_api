@@ -61,7 +61,7 @@ def state():
 
     mod = []
     for m in MODELS:
-        mod.append(m.split('/')[-1])
+        mod.append(m.split('/')[1].split('.')[0])
 
     sce = []
     for s in SCENARIOS:
