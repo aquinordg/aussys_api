@@ -65,7 +65,7 @@ def state():
 
     sce = []
     for s in SCENARIOS:
-        bench.append(s.split('/')[-1])
+        sce.append(s.split('/')[-1])
 
     return {"MODELS": mod, "SCENARIOS": sce, "RESULTS": res}
 
