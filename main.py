@@ -57,7 +57,9 @@ def state():
 
     res = []
     for r in RESULTS:
-        res.append(r.split('/')[-1])
+        model = r.split('/')[1].split('_')[1].split('&')[0]
+        scenery = r.split('/')[1].split('_')[1].split('&')[1]
+        res.append(f'model ´{model}´ applied in ´{scenery}´ scenery')
 
     mod = []
     for m in MODELS:
@@ -144,7 +146,7 @@ def run_predictions(scenery: str, model: str):
     return {"msg": "Prediction finished."}
 
 
-@app.post('/download_results', response_model=message_model)
+@app.post('/download_results')
 def download_results(scenery: str, model: str):
 
     filename = f'results/results_{model}&{scenery}.csv'
@@ -152,7 +154,7 @@ def download_results(scenery: str, model: str):
     if os.path.isfile(filename):
         return FileResponse(filename, media_type="text/csv")
 
-    return {"msg": "Result not available."}
+    return {"Result not available."}
 
 
 #Run the API with uvicorn
