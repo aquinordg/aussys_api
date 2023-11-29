@@ -57,9 +57,9 @@ def state():
 
     res = []
     for r in RESULTS:
-        model = r.split('/')[1].split('_')[1].split('&')[0]
-        scenery = r.split('/')[1].split('_')[1].split('&')[1]
-        res.append(f'model ´{model}´ applied in ´{scenery}´ scenery')
+        model = r.split('/')[1].split('&')[0].split('_')[1]
+        scenery = r.split('/')[1].split('&')[1].split('.')[0]
+        res.append(f'({model}, {scenery})')
 
     mod = []
     for m in MODELS:
